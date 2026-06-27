@@ -3,16 +3,18 @@ from dataclasses import dataclass
 
 @dataclass
 class SimulationConfig:
+
     # Time
     years: int = 30
+    retirement_years: int = 30
     months_per_year: int = 12
 
     # Portfolio
     initial_portfolio: float = 100_000
     monthly_contribution: float = 1_000
-    contribution_growth_rate: float = 0.0  # yearly increase %
+    contribution_growth_rate: float = 0.0
 
-    # Market assumptions
+    # Market
     expected_return: float = 0.08
     volatility: float = 0.15
 
@@ -20,9 +22,10 @@ class SimulationConfig:
     inflation_rate: float = 0.03
     inflation_volatility: float = 0.01
 
-    # Simulation control
+    # Simulation
     n_sims: int = 10_000
     seed: int | None = 42
 
-    # Retirement phase
+    # Retirement behavior
     withdrawal_rate: float = 0.04
+    withdrawal_adjust_for_inflation: bool = True
