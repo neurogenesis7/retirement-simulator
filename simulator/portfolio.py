@@ -13,7 +13,9 @@ def yearly_to_monthly(rate: float) -> float:
     return (1 + rate) ** (1 / 12) - 1
 
 
-def stochastic_return(mean_annual: float, vol_annual: float, rng: np.random.Generator) -> float:
+def stochastic_return(
+    mean_annual: float, vol_annual: float, rng: np.random.Generator
+) -> float:
     """
     Lognormal-style approximation using normal shocks.
     """

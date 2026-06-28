@@ -1,93 +1,120 @@
+"""
+Monte Carlo simulation engine.
+
+This module simulates portfolio accumulation and retirement
+withdrawals using a configurable return generator.
+"""
+
+from __future__ import annotations
+
 import numpy as np
 
 from simulator.assumptions import SimulationConfig
-from simulator.portfolio import (
-    stochastic_return,
-    add_contribution,
-)
+from simulator.return_models.normal import NormalReturnGenerator
+from simulator.timeline import Timeline
 from simulator.withdrawals import (
+    adjust_for_inflation,
     initial_annual_withdrawal,
     monthly_withdrawal,
-    adjust_for_inflation,
 )
 
 
 class MonteCarloEngine:
+    """
+    Runs Monte Carlo retirement simulations.
+    """
 
     def __init__(self, config: SimulationConfig):
         self.config = config
-        self.rng = np.random.default_rng(config.seed)
 
-    def run(self):
+        self.rng = np.random.default_rng(config.simulation.random_seed)
 
-        work_months = self.config.years * self.config.months_per_year
-        retire_months = self.config.retirement_years * self.config.months_per_year
-        total_months = work_months + retire_months
+        self.timeline = Timeline(
+            work_years=config.retirement.accumulation_years,
+            retirement_years=config.retirement.retirement_years,
+        )
 
-        results = np.zeros((self.config.n_sims, total_months))
+        self.return_generator = NormalReturnGenerator(
+            mean=config.market.expected_return,
+            volatility=config.market.volatility,
+            rng=self.rng,
+        )
 
-        for sim in range(self.config.n_sims):
+    def run(self) -> np.ndarray:
+        """
+        Execute the Monte Carlo simulation.
 
-            portfolio = self.config.initial_portfolio
+        Returns
+        -------
+        np.ndarray
+            Shape:
+            (simulations, total_months)
+        """
 
-            # initial withdrawal setup
+        n_sims = self.config.simulation.simulations
+        total_months = self.timeline.total_months
+
+        results = np.zeros((n_sims, total_months))
+
+        for sim in range(n_sims):
+
+            portfolio = self.config.portfolio.initial_value
+
             annual_withdrawal = initial_annual_withdrawal(
                 portfolio,
-                self.config.withdrawal_rate
+                self.config.retirement.withdrawal_rate,
             )
+
             monthly_withdraw = monthly_withdrawal(annual_withdrawal)
 
             inflation_multiplier = 1.0
 
-            for t in range(total_months):
+            for month in range(total_months):
 
-                # stochastic return
-                r = stochastic_return(
-                    self.config.expected_return,
-                    self.config.volatility,
-                    self.rng
-                )
+                monthly_return = self.return_generator.next_return()
 
-                # -------------------------
-                # ACCUMULATION PHASE
-                # -------------------------
-                if t < work_months:
+                # ----------------------------
+                # Accumulation phase
+                # ----------------------------
+                if month < self.timeline.retirement_month:
 
-                    portfolio = add_contribution(
-                        portfolio,
-                        self.config.monthly_contribution
-                    )
+                    portfolio += self.config.portfolio.monthly_contribution
 
-                # -------------------------
-                # RETIREMENT PHASE
-                # -------------------------
+                # ----------------------------
+                # Retirement phase
+                # ----------------------------
                 else:
 
-                    # inflation adjustment (optional)
-                    if self.config.withdrawal_adjust_for_inflation:
-                        infl = self.rng.normal(
-                            self.config.inflation_rate / 12,
-                            self.config.inflation_volatility / np.sqrt(12)
+                    if self.config.retirement.inflation_adjusted_withdrawals:
+
+                        inflation = self.rng.normal(
+                            self.config.market.inflation_rate / 12,
+                            self.config.market.inflation_volatility / np.sqrt(12),
                         )
-                        inflation_multiplier *= (1 + infl)
 
-                        current_withdraw = monthly_withdraw * inflation_multiplier
+                        inflation_multiplier *= 1 + inflation
+
+                        withdrawal = adjust_for_inflation(
+                            monthly_withdraw,
+                            inflation_multiplier - 1,
+                        )
+
                     else:
-                        current_withdraw = monthly_withdraw
 
-                    portfolio -= current_withdraw
+                        withdrawal = monthly_withdraw
 
-                    # prevent negative spiral
+                    portfolio -= withdrawal
+
                     portfolio = max(portfolio, 0)
 
-                # grow portfolio
-                portfolio *= (1 + r)
+                portfolio *= 1 + monthly_return
 
-                results[sim, t] = portfolio
+                results[sim, month] = portfolio
 
-                # stop if ruined (optional efficiency shortcut)
                 if portfolio <= 0:
-                    results[sim, t:] = 0
+
+                    results[sim, month:] = 0
+
                     break
 
         return results

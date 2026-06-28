@@ -12,7 +12,4 @@ class NormalReturnGenerator(ReturnGenerator):
         self.rng = rng
 
     def next_return(self):
-        return self.rng.normal(
-            self.monthly_mean,
-            self.monthly_vol
-        )
+        return self.rng.normal(self.monthly_mean, self.monthly_vol)

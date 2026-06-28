@@ -19,26 +19,18 @@ class SimulationStatistics:
 
     def quantiles_over_time(self, quantiles=None):
         if quantiles is None:
-            quantiles = [0.01, 0.05, 0.10, 0.25, 0.5,
-                         0.75, 0.90, 0.95, 0.99]
+            quantiles = [0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99]
 
-        return {
-            q: np.quantile(self.results, q, axis=0)
-            for q in quantiles
-        }
+        return {q: np.quantile(self.results, q, axis=0) for q in quantiles}
 
     def final_distribution(self):
         return self.results[:, -1]
 
     def final_quantiles(self, quantiles=None):
         if quantiles is None:
-            quantiles = [0.01, 0.05, 0.10, 0.25, 0.5,
-                         0.75, 0.90, 0.95, 0.99]
+            quantiles = [0.01, 0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95, 0.99]
 
-        return {
-            q: np.quantile(self.final_distribution(), q)
-            for q in quantiles
-        }
+        return {q: np.quantile(self.final_distribution(), q) for q in quantiles}
 
     # ----------------------------
     # RISK METRICS
@@ -109,11 +101,8 @@ class SimulationStatistics:
             "mean_final": np.mean(final),
             "p5_final": np.quantile(final, 0.05),
             "p95_final": np.quantile(final, 0.95),
-
             "probability_of_ruin": self.probability_of_ruin(),
             "survival_probability": self.survival_probability(),
-
             "median_ruin_time": self.median_ruin_time(),
-
             "retirement_success_rate": self.success_rate(retirement_start_index),
         }

@@ -1,31 +1,39 @@
+"""
+Simulation controller.
+
+Coordinates the simulation engine and statistical analysis.
+"""
+
+from __future__ import annotations
+
+from simulator.assumptions import SimulationConfig
 from simulator.monte_carlo import MonteCarloEngine
-from simulator.statistics import SimulationStatistics
 from simulator.results import SimulationResults
+from simulator.statistics import SimulationStatistics
 
 
 class SimulationController:
+    """
+    High-level entry point for running simulations.
+    """
 
-    def __init__(self, config):
+    def __init__(self, config: SimulationConfig):
         self.config = config
 
-    def run(self):
+    def run(self) -> SimulationResults:
+        """
+        Execute one complete retirement simulation.
+        """
 
         engine = MonteCarloEngine(self.config)
 
         paths = engine.run()
 
-        stats = SimulationStatistics(paths)
-
-        retirement_start = (
-            self.config.years *
-            self.config.months_per_year
-        )
+        statistics = SimulationStatistics(paths)
 
         return SimulationResults(
+            config=self.config,
+            timeline=engine.timeline,
             paths=paths,
-            statistics=stats,
-            summary=stats.summary(retirement_start),
-            quantiles=stats.quantiles_over_time(),
-            final_distribution=stats.final_distribution(),
-            final_quantiles=stats.final_quantiles(),
+            statistics=statistics,
         )

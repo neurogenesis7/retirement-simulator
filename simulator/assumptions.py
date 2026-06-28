@@ -1,31 +1,31 @@
-from dataclasses import dataclass
+"""
+Top-level simulation configuration.
+
+This module exposes SimulationConfig, which combines all
+configuration sections into one object used throughout
+the retirement simulator.
+"""
+
+from dataclasses import dataclass, field
+
+from simulator.config import (
+    MarketConfig,
+    PortfolioConfig,
+    RetirementConfig,
+    SimulationOptions,
+)
 
 
-@dataclass
+@dataclass(slots=True)
 class SimulationConfig:
+    """
+    Complete configuration for one simulation.
+    """
 
-    # Time
-    years: int = 30
-    retirement_years: int = 30
-    months_per_year: int = 12
+    portfolio: PortfolioConfig = field(default_factory=PortfolioConfig)
 
-    # Portfolio
-    initial_portfolio: float = 100_000
-    monthly_contribution: float = 1_000
-    contribution_growth_rate: float = 0.0
+    market: MarketConfig = field(default_factory=MarketConfig)
 
-    # Market
-    expected_return: float = 0.08
-    volatility: float = 0.15
+    retirement: RetirementConfig = field(default_factory=RetirementConfig)
 
-    # Inflation
-    inflation_rate: float = 0.03
-    inflation_volatility: float = 0.01
-
-    # Simulation
-    n_sims: int = 10_000
-    seed: int | None = 42
-
-    # Retirement behavior
-    withdrawal_rate: float = 0.04
-    withdrawal_adjust_for_inflation: bool = True
+    simulation: SimulationOptions = field(default_factory=SimulationOptions)

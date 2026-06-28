@@ -1,6 +1,13 @@
+"""
+Development test harness.
+
+Run this script to verify the simulator,
+statistics layer, and plotting layer all
+work together.
+"""
+
 from simulator.assumptions import SimulationConfig
-from simulator.monte_carlo import MonteCarloEngine
-from simulator.statistics import SimulationStatistics
+from simulator.controller import SimulationController
 
 from dashboard.plots import (
     plot_fan_chart,
@@ -11,32 +18,33 @@ from dashboard.plots import (
 import plotly.io as pio
 
 
-config = SimulationConfig(
-    years=30,
-    retirement_years=30,
-    n_sims=2000
-)
+def main():
 
-engine = MonteCarloEngine(config)
-results = engine.run()
+    config = SimulationConfig()
 
-stats = SimulationStatistics(results)
+    controller = SimulationController(config)
 
-retirement_start = config.years * 12
+    simulation = controller.run()
 
-quantiles = stats.quantiles_over_time()
+    stats = simulation.statistics
 
-# FAN CHART
-fig1 = plot_fan_chart(quantiles)
-pio.show(fig1)
+    summary = stats.summary(simulation.timeline.retirement_month)
 
-# HISTOGRAM
-fig2 = plot_final_distribution(stats.final_distribution())
-pio.show(fig2)
+    print("\n===== SUMMARY =====")
 
-# SURVIVAL
-fig3 = plot_survival_curve(results)
-pio.show(fig3)
+    for key, value in summary.items():
+        print(f"{key:30s}: {value}")
 
-# PRINT SUMMARY
-print(stats.summary(retirement_start))
+    fan_chart = plot_fan_chart(stats.quantiles_over_time())
+
+    histogram = plot_final_distribution(stats.final_distribution())
+
+    survival = plot_survival_curve(simulation.paths)
+
+    pio.show(fan_chart)
+    pio.show(histogram)
+    pio.show(survival)
+
+
+if __name__ == "__main__":
+    main()

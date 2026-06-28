@@ -1,12 +1,21 @@
-from simulator.statistics import SimulationStatistics
+"""
+Application entry point.
+"""
 
+from dash import Dash
+import dash_bootstrap_components as dbc
 
-def analyze_results(results, retirement_start_index):
-    stats = SimulationStatistics(results)
+from dashboard.layout import create_layout
 
-    return {
-        "summary": stats.summary(retirement_start_index),
-        "quantiles": stats.quantiles_over_time(),
-        "final_quantiles": stats.final_quantiles(),
-        "ruin_curve": stats.ruin_time_distribution(),
-    }
+app = Dash(
+    __name__,
+    external_stylesheets=[dbc.themes.BOOTSTRAP],
+    suppress_callback_exceptions=True,
+)
+
+app.title = "Retirement Simulation Laboratory"
+
+app.layout = create_layout()
+
+if __name__ == "__main__":
+    app.run(debug=True)
