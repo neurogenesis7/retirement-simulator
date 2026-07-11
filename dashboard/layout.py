@@ -1,150 +1,317 @@
 """
-Application layout.
+dashboard/layout.py
 
-Defines the static Dash layout.
+Main application layout for the Retirement Simulation Laboratory.
 """
 
-from dash import dcc
-from dash import html
+from dash import html, dcc
+import dash_bootstrap_components as dbc
+
+from dashboard.components import (
+    section_header,
+    number_input,
+    metric_card,
+)
 
 
-def input_card():
+def input_panel():
+    """
+    Build the left-hand input panel.
+    """
 
-    return html.Div(
+    return dbc.Card(
 
         [
 
-            html.H2("Simulation Inputs"),
+            dbc.CardHeader(
+                html.H4("Simulation Inputs")
+            ),
 
-            html.Hr(),
+            dbc.CardBody(
 
-            html.Div(id="input-panel"),
+                [
 
-            html.Button(
+                    #
+                    # Portfolio
+                    #
+                    section_header("Portfolio"),
 
-                "Run Simulation",
+                    number_input(
+                        "Initial Portfolio",
+                        "initial-portfolio",
+                        100000,
+                        0,
+                        100000000,
+                        1000,
+                    ),
 
-                id="run-button",
+                    number_input(
+                        "Monthly Contribution",
+                        "monthly-contribution",
+                        1000,
+                        0,
+                        50000,
+                        100,
+                    ),
 
-                n_clicks=0,
+                    number_input(
+                        "Annual Contribution Increase (%)",
+                        "annual-contribution-growth",
+                        3,
+                        0,
+                        20,
+                        0.5,
+                    ),
 
-                style={
+                    html.Hr(),
 
-                    "width": "100%",
+                    #
+                    # Market
+                    #
+                    section_header("Market"),
 
-                    "marginTop": "20px",
+                    number_input(
+                        "Expected Return (%)",
+                        "expected-return",
+                        8,
+                        -10,
+                        30,
+                        0.25,
+                    ),
 
-                    "height": "45px",
+                    number_input(
+                        "Volatility (%)",
+                        "volatility",
+                        15,
+                        0,
+                        100,
+                        0.5,
+                    ),
 
-                },
+                    number_input(
+                        "Inflation (%)",
+                        "inflation",
+                        3,
+                        0,
+                        20,
+                        0.25,
+                    ),
+
+                    number_input(
+                        "Inflation Volatility (%)",
+                        "inflation-volatility",
+                        1,
+                        0,
+                        10,
+                        0.25,
+                    ),
+
+                    html.Hr(),
+
+                    #
+                    # Retirement
+                    #
+                    section_header("Retirement"),
+
+                    number_input(
+                        "Years Until Retirement",
+                        "accumulation-years",
+                        30,
+                        1,
+                        60,
+                        1,
+                    ),
+
+                    number_input(
+                        "Years in Retirement",
+                        "retirement-years",
+                        30,
+                        1,
+                        60,
+                        1,
+                    ),
+
+                    number_input(
+                        "Withdrawal Rate (%)",
+                        "withdrawal-rate",
+                        4,
+                        1,
+                        10,
+                        0.25,
+                    ),
+
+                    html.Hr(),
+
+                    #
+                    # Simulation
+                    #
+                    section_header("Simulation"),
+
+                    number_input(
+                        "Monte Carlo Simulations",
+                        "simulation-count",
+                        10000,
+                        100,
+                        100000,
+                        100,
+                    ),
+
+                    number_input(
+                        "Random Seed",
+                        "random-seed",
+                        42,
+                        0,
+                        999999,
+                        1,
+                    ),
+
+                ]
 
             ),
 
-        ],
+            dbc.CardFooter(
 
-        style={
+                dbc.Button(
 
-            "padding": "20px",
+                    "Run Simulation",
 
-            "border": "1px solid lightgray",
+                    id="run-button",
 
-            "borderRadius": "8px",
+                    color="primary",
 
-            "backgroundColor": "#fafafa",
+                    className="w-100",
 
-        },
+                )
 
-    )
+            ),
 
-
-def results_card():
-
-    return html.Div(
-
-        [
-
-            html.H2("Simulation Results"),
-
-            html.Hr(),
-
-            html.Div(id="summary-cards"),
-
-            dcc.Graph(id="fan-chart"),
-
-            dcc.Graph(id="distribution-chart"),
-
-            dcc.Graph(id="survival-chart"),
-
-        ],
-
-        style={
-
-            "padding": "20px",
-
-            "border": "1px solid lightgray",
-
-            "borderRadius": "8px",
-
-        },
+        ]
 
     )
 
 
 def create_layout():
+    """
+    Create the application layout.
+    """
 
-    return html.Div(
+    return dbc.Container(
 
         [
 
-            html.H1(
+            dbc.Row(
 
-                "Retirement Simulation Laboratory",
+                dbc.Col(
 
-                style={
+                    html.H1(
 
-                    "textAlign": "center",
+                        "Retirement Simulation Laboratory",
 
-                    "marginBottom": "30px",
+                        className="text-center my-4",
 
-                },
+                    )
+
+                )
 
             ),
 
-            html.Div(
+            dbc.Row(
 
                 [
 
-                    html.Div(
+                    dbc.Col(
 
-                        input_card(),
+                        input_panel(),
 
-                        style={
-
-                            "width": "28%",
-
-                            "display": "inline-block",
-
-                            "verticalAlign": "top",
-
-                        },
+                        width=3,
 
                     ),
 
-                    html.Div(
+                    dbc.Col(
 
-                        results_card(),
+                        [
 
-                        style={
+                            dbc.Row(
 
-                            "width": "70%",
+                                [
 
-                            "display": "inline-block",
+                                    dbc.Col(
+                                        metric_card(
+                                            "Median",
+                                            "--",
+                                        )
+                                    ),
 
-                            "marginLeft": "2%",
+                                    dbc.Col(
+                                        metric_card(
+                                            "Success",
+                                            "--",
+                                        )
+                                    ),
 
-                            "verticalAlign": "top",
+                                    dbc.Col(
+                                        metric_card(
+                                            "Failure",
+                                            "--",
+                                        )
+                                    ),
 
-                        },
+                                    dbc.Col(
+                                        metric_card(
+                                            "Monthly Income",
+                                            "--",
+                                        )
+                                    ),
+
+                                ],
+
+                                className="mb-3",
+
+                            ),
+
+                            dbc.Card(
+
+                                dbc.CardBody(
+
+                                    dcc.Graph(
+                                        id="fan-chart"
+                                    )
+
+                                ),
+
+                                className="mb-3",
+
+                            ),
+
+                            dbc.Card(
+
+                                dbc.CardBody(
+
+                                    dcc.Graph(
+                                        id="distribution-chart"
+                                    )
+
+                                ),
+
+                                className="mb-3",
+
+                            ),
+
+                            dbc.Card(
+
+                                dbc.CardBody(
+
+                                    dcc.Graph(
+                                        id="survival-chart"
+                                    )
+
+                                ),
+
+                            ),
+
+                        ],
+
+                        width=9,
 
                     ),
 
@@ -154,16 +321,6 @@ def create_layout():
 
         ],
 
-        style={
-
-            "maxWidth": "1800px",
-
-            "margin": "auto",
-
-            "padding": "30px",
-
-            "fontFamily": "Arial",
-
-        },
+        fluid=True,
 
     )
